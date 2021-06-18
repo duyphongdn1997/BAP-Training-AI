@@ -1,6 +1,8 @@
 from mysql import connector
 
 class DBHelper():
+    
+
     def __init__(self, host, port, user, passwd, db):
         self.__host = host
         self.__port = port
@@ -13,7 +15,7 @@ class DBHelper():
                             port=self.__port,
                             user=self.__user,
                             passwd=self.__passwd,
-                            #db=self.__db,
+                            #db=self.__db, #Do not specify the database name
                             charset='utf8') 
         return conn
 
@@ -55,6 +57,10 @@ class DBHelper():
         cur.execute(sql,params)
         conn.commit()
         cur.close()
+        conn.close()
+
+    def close(self, sql, *param):
+        conn = self.connectDatabase()
         conn.close()
 
     def delete(self,sql,*params):

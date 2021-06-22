@@ -8,8 +8,8 @@ class DBHelper:
     """
     DB_HOST = 'localhost'
     DB_PORT = 3306
-    DB_USER = 'abc'
-    DB_PASSWORD = 'abc@#123'
+    DB_USER = 'roots'
+    DB_PASSWORD = 'BAPAiIntern2021@'
     DB_NAME = 'test'
 
     connected = False
@@ -132,9 +132,14 @@ class DBHelper:
             print("-----------INSERT ERROR-----------")
             print("SQL Error: {}".format(self.cursor.statement))
 
-    def select(self, table, where=None, parameters=None, field="*"):
-        if parameters is None:
-            parameters = {}
+    def select(self, table, where=None, field="*"):
+        """
+        This method used to insert new records in the table
+        :param table: Name of the table
+        :param where: Sql condition
+        :param field: list of field need to query
+        """
+
         if where is None:
             where = {}
         where_or = ''
@@ -275,7 +280,7 @@ if __name__ == '__main__':
         "fak": "varchar(50)",
         "Id": "int"
     }
-    # connect_.create_table('table1', create_test)
+    connect_.create_table('table1', create_test)
     # testSelect = connect_.select('table1', testSelectParams)
     # connect_.insert('table1', testInsertParams)
     # connect_.update('table1', testUpdateParams)

@@ -1,6 +1,6 @@
 # https://tuna.thesaurus.com/relatedWords/
 import requests
-from Database import Database
+import Database
 
 x = requests.get('https://tuna.thesaurus.com/relateWords/one')
 db = db_test = {

@@ -4,10 +4,6 @@ from Database import Database
 
 
 def main():
-    """
-
-    :return:
-    """
 
     con = Database(host="localhost", user="roots", password="BAPAiIntern2021@", port=3306, database="Test")
     con.create_table("CREATE TABLE SYNONYMS(WORD VARCHAR(35), MEANING VARCHAR(200), RELATED_WORD VARCHAR(35),"

@@ -138,8 +138,8 @@ class AnimeRecommendationSystem:
     @staticmethod
     def plot_graph(stats):
         """
-
-        :param stats:
+        This methods used to plot the loss stored when training/updating P/Q process
+        :param stats: History of loss
         :return:
         """
         i = [i for i, e in stats]

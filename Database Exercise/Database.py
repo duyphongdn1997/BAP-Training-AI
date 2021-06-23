@@ -1,3 +1,4 @@
+from typing import List
 from mysql import connector
 from mysql.connector import errorcode
 
@@ -16,9 +17,13 @@ class Database(object):
         self.params = param
         self._connection = None
         self._cursor = None
-        self._init_()
+        self.__create()
 
     def __create_connection(self):
+        """
+        This method used to create a connection to database using connector-python
+        :return: the connection to database
+        """
         if not self._connection:
             try:
                 self._connection = connector.connect(**self.params)
@@ -34,7 +39,7 @@ class Database(object):
 
     def __get_cursor(self):
         """
-        Get cursor of the connection
+        This method used to get cursor of the connection
         :return: cursor of the connection
         """
         if not self._cursor:
@@ -43,22 +48,22 @@ class Database(object):
             self._cursor = self._connection.cursor()
         return self._cursor
 
-    def _init_(self):
+    def __create(self):
         """
-        Create connection and get the cursor
+        This method used to create connection and get the cursor
         """
         self.__create_connection()
         self.__get_cursor()
 
     def _commit(self):
         """
-        Commit the query
+        This method used to commit the query to database
         """
         self._connection.commit()
 
     def execute(self, query: str, values: tuple = None):
         """
-        This method execute query into database
+        This method used to execute query into database
         :param query: sql statement
         :param values: params to execute
         :return:
@@ -72,7 +77,7 @@ class Database(object):
         except (Exception, connector.Error) as err:
             print("Error occur when execute query into database:", err)
 
-    def executemany(self, query: str, values: [tuple]):
+    def executemany(self, query: str, values: List[tuple]):
         """
         This method execute many query into database
         :param query: sql statement
@@ -85,7 +90,7 @@ class Database(object):
 
     def fetch_all(self, query: str, need_fields: bool = False):
         """
-
+        This method used to return values on a field in database
         :param query: sql statement
         :param need_fields: params to fetch
         :return:

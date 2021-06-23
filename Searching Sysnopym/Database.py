@@ -1,8 +1,6 @@
 from mysql import connector
 from mysql.connector import errorcode
 
-LIMIT_RETRIES = 3
-
 
 class Database(object):
     """
@@ -167,6 +165,3 @@ class Database(object):
         :return:
         """
         self.execute(query)
-
-
-def main():

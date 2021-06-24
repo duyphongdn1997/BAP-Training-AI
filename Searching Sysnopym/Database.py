@@ -63,7 +63,6 @@ class Database(object):
         :return:
         """
         try:
-            self._cursor.execute(query, values)
             if values:
                 self._cursor.execute(query, values)
             else:
@@ -155,7 +154,6 @@ class Database(object):
         :param query:
         :return:
         """
-        self.execute(query)
         return self.fetch_all(query)
 
     def create_table(self, query):
@@ -165,3 +163,20 @@ class Database(object):
         :return:
         """
         self.execute(query)
+
+
+def main():
+    database = Database(host="localhost", user="roots", password="BAPAiIntern2021@", port=3306, database="Test")
+    # database.create_table("CREATE TABLE ABC(WORD_QUERY VARCHAR(25), MEANING VARCHAR(200)"
+    #                       ", RELATED_WORDS VARCHAR(25), SIMILAR INT)")
+    # sql = "INSERT INTO ABC(WORD_QUERY, MEANING, RELATED_WORDS, SIMILAR) VALUES(%s, %s, %s, %s)"
+    # params = ('abcii', 'abc', 'def', 15)
+    # database.insert_one(sql, params)
+    sql1 = "SELECT * FROM SYNONYMS WHERE WORD='happy'"
+    data = database.select(sql1)
+    for i in data:
+        print(i)
+
+
+if __name__ == "__main__":
+    main()

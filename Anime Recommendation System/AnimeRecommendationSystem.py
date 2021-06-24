@@ -161,3 +161,25 @@ class AnimeRecommendationSystem:
         plt.xlabel("Iterations")
         plt.ylabel("Mean Square Error")
         plt.show()
+
+
+def main():
+    anime = pd.read_csv('/content/anime.csv')
+    rating = pd.read_csv('/content/rating.csv')
+    rating.rating.replace({-1: 0}, inplace = True)
+    data_sub = rating[rating['user_id']<=10000]
+    data_sub = np.array(data_sub)
+    rows, row_pos = np.unique(data_sub[:, 0], return_inverse=True)
+    cols, col_pos = np.unique(data_sub[:, 1], return_inverse=True)
+
+    pivot_table = np.zeros((len(rows), len(cols)), dtype=data_sub.dtype)
+    pivot_table[row_pos, col_pos] = data_sub[:, 2]
+    pivot_table.shape
+    model = AnimeRecommendationSystem(utility_matrix=pivot_table)
+    model.matrix_factorization(iterations=200, lr=0.001, lambda_=0.02)
+
+if __name__=="__main__":
+    main()
+
+
+

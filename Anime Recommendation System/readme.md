@@ -37,5 +37,34 @@ Từ công thức trên, ta tính lại công thức update cho P và Q:
 
 ![regular-update](./image/regular2.png)
 
+### 3.Usage
+#### Read and convert dataframe to utility matrix
+Read file csv
+```
+anime = pd.read_csv('/content/anime.csv')
+rating = pd.read_csv('/content/rating.csv')
+```
+
+Convert
+
+```
+rating.rating.replace({-1: 0}, inplace = True)
+data_sub = rating[rating['user_id']<=10000]
+data_sub = np.array(data_sub)
+rows, row_pos = np.unique(data_sub[:, 0], return_inverse=True)
+cols, col_pos = np.unique(data_sub[:, 1], return_inverse=True)
+
+pivot_table = np.zeros((len(rows), len(cols)), dtype=data_sub.dtype)
+pivot_table[row_pos, col_pos] = data_sub[:, 2]
+pivot_table.shape
+```
+
+Tính ma trận và vẽ đồ thị hàm loss
+
+```
+model = AnimeRecommendationSystem(utility_matrix=pivot_table)
+model.matrix_factorization(iterations=200, lr=0.001, lambda_=0.02)
+```
+
 
 

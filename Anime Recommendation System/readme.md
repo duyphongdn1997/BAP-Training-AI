@@ -26,5 +26,16 @@ Ta thực hiên thay đổi như sau:
 
 ![update3](./image/update2.png)
 
+#### Regularization
+Để tránh tình trạng overfiting, ta áp dụng thêm regularization vào công thức tính:
+
+![regular](./image/regular.png)
+
+Từ công thức trên, ta tính lại công thức update cho P và Q:
+
+![regular-update](./image/regular1.png)
+
+![regular-update](./image/regular2.png)
+
 
 

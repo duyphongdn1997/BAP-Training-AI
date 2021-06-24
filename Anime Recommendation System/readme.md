@@ -24,5 +24,7 @@ Ta thực hiên thay đổi như sau:
 
 ![update2](./image/update1.png)
 
+![update3](./image/update2.png)
+
 
 

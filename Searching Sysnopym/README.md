@@ -1,7 +1,7 @@
 ### Usage
 #### To crawl data
 ```commandline
-python3 SearchingSynopym.py --crawl-data
+python3 SearchingSynonym.py --crawl-data
 ```
 #### To get synonyms
 ```commandline

@@ -24,10 +24,12 @@ class AnimeRecommendationSystem:
         # Get matrix of dimension K x M
         self.Q = self.Q.T
 
-    def __compute_cost(self, prediction):
+    def compute_cost(self, prediction: np.ndarray, lambda_: float):
         """
-        This function takes actual and predicted ratings and compute total mean square error(mse) in observed ratings
+        This function takes actual and predicted ratings and compute total mean square 
+        error(mse) in observed ratings
         :param prediction: prediction of matrix factorized
+        :param _lambda: lambda to regularization
         :return: total mean square error
         """
         mse = 0
@@ -36,11 +38,11 @@ class AnimeRecommendationSystem:
         for x in range(i):
             for y in range(j):
                 if self.utility_matrix[x][y] != 0:
-                    error = (self.utility_matrix[x][y] - prediction[x][y]) ** 2
+                    error = (lambda_/2) * (self.utility_matrix[x][y] - prediction[x][y]) ** 2
                     mse += error
         return mse
 
-    def __get_predicted_ratings(self, users, items):
+    def get_predicted_ratings(self, users: np.ndarray, items: np.ndarray):
         """
         This method takes P(m*k) and Q(k*n) matrices along with user bias (U)
         and item bias (I) and returns predicted rating.
@@ -61,14 +63,18 @@ class AnimeRecommendationSystem:
             matrix.append(row)
         return matrix
 
-    def __run_gradient_descent(self, users_, items_,
-                               iterations: int = 300,
-                               lr: float = 0.01,
-                               error_limit: float = 0.0001):
+    def run_gradient_descent(self, users_: np.ndarray,
+                             items_: np.ndarray,
+                             iterations: int = 300,
+                             lr: float = 0.01,
+                             lambda_: float = 0.02,
+                             error_limit: float = 0.0001):
         """
+        This method used to run gradient descent
         :param error_limit: limited error
         :param lr: learning rate, default = 0.01
         :param iterations: number of iterations to train model
+        :param lambda_: lambda to regularization
         :param users_:
         :param items_:
         :return:
@@ -83,63 +89,70 @@ class AnimeRecommendationSystem:
                 # contains row, col and value of utility matrix's entry != 0
                 if self.utility_matrix[x][y] != 0:
                     tup = (x, y, self.utility_matrix[x][y])
-                    sample.append(tup)
+                    sample.append(tup)  
 
         P = self.P
         Q = self.Q
 
         for i in range(iterations):
-            for x, y, r in sample:
-                predict_matrix = self.__get_predicted_ratings(users_, items_)
+            for x, y, rating_ in sample:
+                predict_matrix = self.get_predicted_ratings(users_, items_)
                 prediction = predict_matrix[x][y]
-                error = r - prediction
+                error = rating_ - prediction
 
                 # updating biases
-                users_[x] += lr * (2 * error)
-                items_[y] += lr * (2 * error)
+                users_[x] += lr * (2 * error - lambda_ * users_[x])
+                items_[y] += lr * (2 * error - lambda_ * items_[y])
 
                 # updating P and Q
-                P[x, :] += lr * (2 * error * Q[:, y])
-                Q[:, y] += lr * (2 * error * P[x, :])
-            mse = self.__compute_cost(predict_matrix)
+                P[x, :] += lr * (2 * error * Q[:, y] - lambda_ * P[x, :])
+                Q[:, y] += lr * (2 * error * P[x, :] - lambda_ * Q[:, y])
+            mse = self.compute_cost(predict_matrix, lambda_=lambda_)
             err = (i, mse)
             stats.append(err)
-
             if mse < error_limit:
                 break
         """"finally returns (iter,mse) values in a list"""
         # print(stats)
-        return stats
-
-    def matrix_factorization(self, iterations: int = 300, lr: float = 0.001):
+        return stats, P, Q
+    
+    def matrix_factorization(self, iterations: int = 300, lr: float = 0.001,
+                             lambda_: float = 0.02):
         """
+        This methods used to get P matrix, Q matrix, predicted utility matrix and plot the loss function.
         :param iterations : the maximum number of steps to perform the optimisation
+        :param _lambda: lambda to regularization
         :param lr : the learning rate
         """
 
         U = np.zeros(self.users)
         I = np.zeros(self.items)
         # Run gradient descent to minimize error
-        stats = self.__run_gradient_descent(users_=U, items_=I, iterations=iterations, lr=lr)
+        stats, P, Q = self.run_gradient_descent(users_=U, items_=I, iterations=iterations,
+                                          lr=lr, lambda_ = lambda_)
 
-        print('P matrix:')
-        print(self.P)
-        print('Q matrix:')
-        print(self.Q)
-        print("User bias:")
-        print(U)
-        print("Item bias:")
-        print(I)
-        print("P x Q:")
-        print(self.__get_predicted_ratings(U, I))
-        print(len(self.__get_predicted_ratings(U, I)))
+        # print('P matrix:')
+        # print(P)
+        # print('Q matrix:')
+        # print(Q)
+        # print("User bias:")
+        # print(U)
+        # print("Item bias:")
+        # print(I)
+        print("Utility matrix:")
+        print(self.utility_matrix)
+        print("Predicted utility matrix:")
+        predicted_ratings = self.get_predicted_ratings(U, I)
+        for i in predicted_ratings:
+            print(i)
+        print(len(predicted_ratings))
         self.plot_graph(stats)
 
     @staticmethod
     def plot_graph(stats):
         """
-        This methods used to plot the loss stored when training/updating P/Q process
-        :param stats: History of loss
+        This method usedto plot the loss function.
+        :param stats: history of the loss function.
         :return:
         """
         i = [i for i, e in stats]

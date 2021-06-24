@@ -142,7 +142,6 @@ class Database(object):
         :param query: sql statement
         :return: List of records selected.
         """
-        self.execute(query)
         return self.fetch_all(query)
 
     def create_table(self, query):

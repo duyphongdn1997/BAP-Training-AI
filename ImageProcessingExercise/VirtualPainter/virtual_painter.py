@@ -58,12 +58,12 @@ def virtual_painter(opt):
         # key parameter used to apply cv2.contourArea to contours before using max()
 
         try:
-            noise = cv2.contourArea(max(contours, key=cv2.contourArea))
+            non_noise = cv2.contourArea(max(contours, key=cv2.contourArea))
         except ValueError as e:
             print("None of contours")
 
         # Detect blue and yellow object
-        if contours_red and noise > 500:
+        if contours_red and non_noise > 500:
             cnt_ = max(contours_red, key=cv2.contourArea)
             x_after_red, y_after_red, w, h = cv2.boundingRect(cnt_)
             print()

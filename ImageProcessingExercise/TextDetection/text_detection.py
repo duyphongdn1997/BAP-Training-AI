@@ -24,7 +24,7 @@ def text_detection(image_path: str = "./image/"):
         grays.append(gray)
 
     edges = cv2.Canny(images[0], 100, 200)
-    contours, hierarchy = cv2.findContours(edges, cv2.RETR_EXTERNAL, cv2.CHAIN_APPROX_SIMPLE)
+    contours, hierarchy = cv2.findContours(edges, cv2.RETR_TREE, cv2.CHAIN_APPROX_NONE)
     for cnt in contours:
         if 10000 > cv2.contourArea(cnt) > 30:
             x, y, w, h = cv2.boundingRect(cnt)

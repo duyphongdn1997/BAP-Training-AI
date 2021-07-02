@@ -8,9 +8,7 @@ Collaborative filtering là một ứng dụng thuật toán Matrix Factorizatio
 
 ![PxQ](./image/PxQ.png)
 
-```math
-R \approx P^2 
-```
+$$R \approx P^2$$ 
 
 Mỗi hàng của P sẽ đại diện cho mối tương quan giữa users và items, tương tự mỗi hàng của Q đại diện cho mối tương quan giữa items và users. Để dự đoán được ratings của items [i] bởi user [j] ta có thể tính bằng cách nhân hai vector:
 

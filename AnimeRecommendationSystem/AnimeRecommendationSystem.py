@@ -29,7 +29,7 @@ class AnimeRecommendationSystem:
         This function takes actual and predicted ratings and compute total mean square 
         error(mse) in observed ratings
         :param prediction: prediction of matrix factorized
-        :param _lambda: lambda to regularization
+        :param lambda_: lambda to regularization
         :return: total mean square error
         """
         mse = 0
@@ -121,7 +121,7 @@ class AnimeRecommendationSystem:
         """
         This methods used to get P matrix, Q matrix, predicted utility matrix and plot the loss function.
         :param iterations : the maximum number of steps to perform the optimisation
-        :param _lambda: lambda to regularization
+        :param lambda_: lambda to regularization
         :param lr : the learning rate
         """
 
@@ -164,7 +164,7 @@ class AnimeRecommendationSystem:
 
 
 def main():
-    anime = pd.read_csv('/content/anime.csv')
+    # anime = pd.read_csv('/content/anime.csv')
     rating = pd.read_csv('/content/rating.csv')
     rating.rating.replace({-1: 0}, inplace = True)
     data_sub = rating[rating['user_id']<=10000]
@@ -174,12 +174,9 @@ def main():
 
     pivot_table = np.zeros((len(rows), len(cols)), dtype=data_sub.dtype)
     pivot_table[row_pos, col_pos] = data_sub[:, 2]
-    pivot_table.shape
     model = AnimeRecommendationSystem(utility_matrix=pivot_table)
     model.matrix_factorization(iterations=200, lr=0.001, lambda_=0.02)
 
+
 if __name__=="__main__":
     main()
-
-
-

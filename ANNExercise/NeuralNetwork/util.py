@@ -59,3 +59,4 @@ def plot_contour(X, y, model, parameters):
     # plt the points
     plt.scatter(X[:, 0], X[:, 1], c=y, s=40, cmap=plt.cm.Spectral)
     # plt.savefig('spiral_net.png')
+

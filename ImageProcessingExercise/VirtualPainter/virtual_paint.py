@@ -51,31 +51,32 @@ class VirtualPaint:
         line = None
         x_before_red, y_before_red, x_after_red, y_after_red = 0, 0, 0, 0
         x_before_yellow, y_before_yellow, x_after_yellow, y_after_yellow = 0, 0, 0, 0
-        kernel = cv2.getStructuringElement(cv2.MORPH_ELLIPSE, (5, 5))
+        kernel = cv2.getStructuringElement(cv2.MORPH_RECT, (3, 3))
+        kernel_ = cv2.getStructuringElement(cv2.MORPH_RECT, (9, 9))
         while True:
             ret, frame = self.camera.read()
             frame = cv2.flip(frame, flipCode=1)
             if line is None:
-                line = np.zeros_likes(frame)
+                line = np.zeros_like(frame)
 
             # Threshold the HSV image to get only blue and yellow colors
-            lower_red = np.array([155, 73, 43])
-            upper_red = np.array([179, 255, 244])
+            lower_red = np.array([176, 217, 0])
+            upper_red = np.array([179, 255, 254])
 
-            lower_yellow = np.array([30, 110, 0])
-            upper_yellow = np.array([40, 255, 255])
+            lower_yellow = np.array([28, 101, 30])
+            upper_yellow = np.array([33, 255, 255])
 
             yellow_mask = self.get_color_segmentation(frame, lower_yellow, upper_yellow)
             red_mask = self.get_color_segmentation(frame, lower_red, upper_red)
             yellow_mask = self.mask_preprocess(yellow_mask, erosion_kernel=kernel,
                                                dilation_kernel=kernel,
                                                erosion_iterations=1,
-                                               dilation_iterations=2)
+                                               dilation_iterations=5)
 
             red_mask = self.mask_preprocess(red_mask, erosion_kernel=kernel,
-                                            dilation_kernel=kernel,
-                                            erosion_iterations=3,
-                                            dilation_iterations=2)
+                                            dilation_kernel=kernel_,
+                                            erosion_iterations=1,
+                                            dilation_iterations=150)
 
             # Find contours
             red_contours, hierarchy_red = cv2.findContours(red_mask, cv2.RETR_EXTERNAL, cv2.CHAIN_APPROX_NONE)
@@ -87,16 +88,22 @@ class VirtualPaint:
 
             try:
                 non_noise_red = cv2.contourArea(max(red_contours, key=cv2.contourArea))
+                # non_noise_yellow = cv2.contourArea(max(yellow_contours, key=cv2.contourArea))
+            except ValueError:
+                print("None of red contours")
+                
+            try:
+                # non_noise_red = cv2.contourArea(max(red_contours, key=cv2.contourArea))
                 non_noise_yellow = cv2.contourArea(max(yellow_contours, key=cv2.contourArea))
             except ValueError:
-                print("None of contours")
+                print("None of yellow contours") 
 
             # Detect red and yellow objects
-            if red_contours and non_noise_red > 500:
+            if red_contours and non_noise_red > 450:
                 red_contour = max(red_contours, key=cv2.contourArea)
                 x_after_red, y_after_red, w, h = cv2.boundingRect(red_contour)
                 if x_before_red == 0 and y_before_red == 0:
-                    x_after_red, y_after_red = x_before_red, y_before_red
+                    x_before_red, y_before_red = x_after_red, y_after_red
                 else:
                     line = cv2.line(line, (x_before_red, y_before_red),
                                     (x_after_red, y_after_red), [0, 0, 255], thickness=7)
@@ -105,7 +112,7 @@ class VirtualPaint:
                 yellow_contour = max(yellow_contours, key=cv2.contourArea)
                 x_after_yellow, y_after_yellow, w, h = cv2.boundingRect(yellow_contour)
                 if x_before_yellow == 0 and y_before_yellow == 0:
-                    x_after_yellow, y_after_yellow = x_before_yellow, y_before_yellow
+                    x_before_yellow, y_before_yellow = x_after_yellow, y_after_yellow
                 else:
                     line = cv2.line(line, (x_before_yellow, y_before_yellow),
                                     (x_after_yellow, y_after_yellow), [0, 255, 255], thickness=7)
@@ -132,33 +139,32 @@ class VirtualPaint:
         """
         This method used to control the volume of the PC using distance of two color of points.
         """
-        kernel = cv2.getStructuringElement(cv2.MORPH_ELLIPSE, (5, 5))
+        kernel = cv2.getStructuringElement(cv2.MORPH_ELLIPSE, (3, 3))
         x_before_red, y_before_red, x_after_red, y_after_red = 0, 0, 0, 0
         x_before_yellow, y_before_yellow, x_after_yellow, y_after_yellow = 0, 0, 0, 0
+        kernel_ = cv2.getStructuringElement(cv2.MORPH_ELLIPSE, (9, 9))
         while True:
             ret, frame = self.camera.read()
             frame = cv2.flip(frame, flipCode=1)
-            if line is None:
-                line = np.zeros_likes(frame)
 
             # Threshold the HSV image to get only blue and yellow colors
-            lower_red = np.array([155, 73, 43])
-            upper_red = np.array([179, 255, 244])
+            lower_red = np.array([176, 100, 0])
+            upper_red = np.array([179, 255, 254])
 
-            lower_yellow = np.array([30, 110, 0])
-            upper_yellow = np.array([40, 255, 255])
+            lower_yellow = np.array([28, 101, 30])
+            upper_yellow = np.array([33, 255, 255])
 
             yellow_mask = self.get_color_segmentation(frame, lower_yellow, upper_yellow)
             red_mask = self.get_color_segmentation(frame, lower_red, upper_red)
             yellow_mask = self.mask_preprocess(yellow_mask, erosion_kernel=kernel,
                                                dilation_kernel=kernel,
                                                erosion_iterations=1,
-                                               dilation_iterations=2)
+                                               dilation_iterations=5)
 
             red_mask = self.mask_preprocess(red_mask, erosion_kernel=kernel,
                                             dilation_kernel=kernel,
-                                            erosion_iterations=3,
-                                            dilation_iterations=2)
+                                            erosion_iterations=1,
+                                            dilation_iterations=200)
 
             # Find contours
             red_contours, hierarchy_red = cv2.findContours(red_mask, cv2.RETR_EXTERNAL, cv2.CHAIN_APPROX_NONE)
@@ -169,10 +175,15 @@ class VirtualPaint:
             # key parameter used to apply cv2.contourArea to contours before using max()
             try:
                 non_noise_red = cv2.contourArea(max(red_contours, key=cv2.contourArea))
+                # non_noise_yellow = cv2.contourArea(max(yellow_contours, key=cv2.contourArea))
+            except ValueError:
+                print("None of red contours")
+                
+            try:
+                # non_noise_red = cv2.contourArea(max(red_contours, key=cv2.contourArea))
                 non_noise_yellow = cv2.contourArea(max(yellow_contours, key=cv2.contourArea))
             except ValueError:
-                print("None of contours")
-
+                print("None of yellow contours")    
             distance_before = sqrt((x_before_red - x_before_yellow) ** 2 +
                                    (y_before_yellow - y_before_red) ** 2)
 
@@ -181,7 +192,7 @@ class VirtualPaint:
                 red_contour = max(red_contours, key=cv2.contourArea)
                 x_after_red, y_after_red, w, h = cv2.boundingRect(red_contour)
                 if x_before_red == 0 and y_before_red == 0:
-                    x_after_red, y_after_red = x_before_red, y_before_red
+                    x_before_red, y_before_red = x_after_red, y_after_red
                 else:
                     cv2.rectangle(frame, (x_after_red, y_after_red),
                                   (x_after_red + w, y_after_red + h), [0, 0, 255], 3)
@@ -190,7 +201,7 @@ class VirtualPaint:
                 yellow_contour = max(yellow_contours, key=cv2.contourArea)
                 x_after_yellow, y_after_yellow, w, h = cv2.boundingRect(yellow_contour)
                 if x_before_yellow == 0 and y_before_yellow == 0:
-                    x_after_yellow, y_after_yellow = x_before_yellow, y_before_yellow
+                    x_before_yellow, y_before_yellow = x_after_yellow, y_after_yellow
                 else:
                     cv2.rectangle(frame, (x_after_yellow, y_after_yellow),
                                   (x_after_yellow + w, y_after_yellow + h), [0, 255, 255], 3)
@@ -205,11 +216,30 @@ class VirtualPaint:
             if diff >= 0:
                 volume_up = int(diff * scale)
                 for i in range(volume_up):
-                    pyautogui.press("volumeup")
+                    try:
+                        pyautogui.press("volumeup")
+                    except:
+                        print("Nothing change!")
             else:
                 volume_down = int(diff * scale)
                 for i in range(volume_down):
-                    pyautogui.press("volumedown")
+                    try:
+                        pyautogui.press("volumedown")
+                    except:
+                        print("Nothing change!")
+
+            # Visualize mask
+            red_yellow_mask = cv2.bitwise_and(frame, frame, mask=red_mask + yellow_mask)
+
+            stacked = np.hstack((frame, red_yellow_mask))
+            cv2.putText(stacked, "Volume :" + str(diff), (50, 50), cv2.FONT_HERSHEY_SIMPLEX, 
+                        fontScale=1, color=[255, 0, 0], thickness=3)
+            cv2.imshow("Control Volume", stacked)
+            if cv2.waitKey(0) & 0xFF == ord("q"):
+                break
+
+        self.camera.release()
+        cv2.destroyAllWindows()
 
 
 if __name__ == "__main__":

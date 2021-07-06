@@ -1,5 +1,6 @@
-import numpy as np
 import matplotlib.pyplot as plt
+from tqdm import tqdm
+from activation import *
 
 
 class NeuralNetwork(object):
@@ -10,6 +11,7 @@ class NeuralNetwork(object):
         """
         This method used to initialize the init value
         """
+        self.dz = []
         self.output_values = []
         self.summary = []
         self.layer_names = []
@@ -56,19 +58,43 @@ class NeuralNetwork(object):
         :return: the predict of the x using the current neuron network.
         """
         a = 0
-        for layer_index in range(self.number_of_layers - 1):
+        for layer_index in range(self.number_of_layers):
             z = self.forward(x, self.weights[layer_index]) + self.bias[layer_index]
             self.output_values.append(z)
             a = self.activation_functions[layer_index](z)
             self.activations.append(a)
-        return a
 
-    def __backpropagation(self, y_true: np.ndarray, y_predict: np.ndarray):
+    @staticmethod
+    def __compute_cost(y_predict: np.ndarray, y_true: np.ndarray):
+        """
+        This method used to compute loss (cross entropy method) during training.
+        :param y_predict: The
+        :param y_true: Target variables
+        :return: the loss value with current params of neural network.
+        """
+        m = y_predict.shape[0]
+        network_cost = (1 / m) * np.sum(-y_true * np.log(y_predict) -
+                                        (1 - y_true) * np.log(1 - y_predict))
+        return network_cost
+
+    def __backpropagation(self, x_train: np.ndarray, y_true: np.ndarray):
         """
         This method used to compute and update the params for each epoch
         :param y_true: The target variables
-        :param y_predict: the result value after feed forward the neural network
         :return: new param of the neural network
+        """
+        # Backward
+        for layer_index in reversed(range(self.number_of_layers)):
+            # Backward activation
+            if layer_index < self.number_of_layers - 1:
+                if self.activation_names == "sigmoid":
+                    self.dz[layer_index] = sigmoid_backward(x_train[layer_index + 1],
+                                                            self.dz[layer_index + 1].dot(
+                                                                 self.weights[layer_index + 1].T))
+
+    def __update_parameter(self):
+        """
+        This method used to update to parameter in the each neuron in neural network
         """
         pass
 
@@ -107,18 +133,46 @@ class NeuralNetwork(object):
                 self.activation_names.append("LeakyReLU")
                 self.activation_functions.append(self.__leaky_relu)
 
+    @staticmethod
+    def __batch_generator(x_train: np.ndarray, y_train: np.ndarray, batch_size: int):
+        """
+        This method used to generate batches to feed to our neural network.
+        :param x_train: input variables
+        :param y_train: Target variables
+        :param batch_size: the size of the batch feed to training our neural network
+        :return: Batches of input data
+        """
+        indices = np.arange(len(x_train))
+        batch = []
+        while True:
+            np.random.shuffle(indices)
+            for i in indices:
+                batch.append(i)
+                if len(batch) == batch_size:
+                    yield x_train[batch], y_train[batch]
+                    batch = []
+
     def fit(self, x_train: np.ndarray, y_train: np.ndarray,
-            epochs: int, batch_size: int, learning_rate: float = 0.001):
+            epochs: int, batch_size: int = None, learning_rate: float = 0.001):
         """
         This method used to train the model with x_train and y_train dataset.
         :param x_train: input variables
         :param y_train: target variables
         :param epochs: the number of iterations to loop the training section.
-        :param batch_size: the size of input variables feed to neural network for training
+        :param batch_size: the size of input variables feed to training neural network
         :param learning_rate: the learning rate to update parameter.
         :return: the weights after training
         """
-        pass
+        if batch_size is None:
+            batch_size = len(x_train)
+        for i in range(epochs):
+            batch_x, batch_y = self.__batch_generator(x_train, y_train, batch_size)
+            self.__feed_forward(batch_x)
+            loss = self.__compute_cost(self.activations[self.number_of_layers - 1], batch_y)
+            print("Epoch: {} \t Loss: {}".format(i, loss))
+            print("-------------------------------------")
+            self.__backpropagation(batch_y)
+            self.__update_parameter()
 
     def summary(self):
         """

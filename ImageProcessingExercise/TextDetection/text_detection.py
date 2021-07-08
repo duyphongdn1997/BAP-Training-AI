@@ -8,6 +8,8 @@ class TextDetector(object):
     """
     This class used to perform examination image processing.
     """
+    image = None
+
     def __init__(self, kernel_size: int = 5):
         """
         This is the init
@@ -41,8 +43,8 @@ class TextDetector(object):
         :param image_path:
         """
         for file in glob.glob(image_path + "*.png"):
-            self.image = cv2.imread(file)
-            self.images.append(self.image)
+            image = cv2.imread(file)
+            self.images.append(image)
 
     @staticmethod
     def canny_edge_detection(image, blur_k_size=5, threshold1=100, threshold2=300, cvt_color=True):
@@ -81,7 +83,7 @@ class TextDetector(object):
             pts = np.array([[x, y], [x, y2], [x2, y2], [x2, y]])
             cv2.fillPoly(mask, pts=[pts], color=(255, 255, 255))
 
-        mask = cv2.dilate(mask, kernel, iterations=2)
+        mask = cv2.dilate(mask, self.kernel, iterations=2)
         if crop:
             crop_image = cv2.bitwise_and(img, img, mask=mask)
             cv2.imshow("Crop Image", crop_image)

@@ -1,21 +1,22 @@
 import cv2
 import numpy as np
 import glob
-
-
-kernel = cv2.getStructuringElement(cv2.MORPH_ELLIPSE, (5, 3))
+from random import randint
 
 
 class TextDetector(object):
     """
-
+    This class used to perform examination image processing.
     """
     def __init__(self, kernel_size: int = 5):
-
+        """
+        This is the init
+        :param kernel_size: The size of kernel use to process.
+        """
         self.kernel = cv2.getStructuringElement(cv2.MORPH_RECT, (kernel_size, kernel_size))
         self.contour = []
         self.images = []
-        self.image = None
+        self.set_image()
 
     def set_image(self, image_path: str = "./image/",
                   image_name: str = "0.png"):
@@ -93,28 +94,67 @@ class TextDetector(object):
         cv2.waitKey(0)
         cv2.destroyAllWindows()
 
-    def big_question_detector(self, crop: bool = True):
+    def big_question_detector(self, draw: bool = True, crop: bool = True):
         """
-        This method used to detect
-        :return:
+        This method used to detect big question contours
+        :param crop: Set True order to show crop only big question, False if show whole with big question contours.
+        :param draw: Draw or not draw
+        :return: List of contours of the big questions
         """
         dilate = self.__get_dilate()
         img = self.get_image()
         contours, hierarchy = cv2.findContours(dilate, cv2.RETR_EXTERNAL, cv2.CHAIN_APPROX_NONE)
         contours_ = list(filter(lambda cnt: cv2.boundingRect(cnt)[1] > 150 and cv2.boundingRect(cnt)[3] > 100
                                 and cv2.contourArea(cnt) > 1600 and cv2.boundingRect(cnt)[2] > 1000, contours))
-        mask = np.zeros_like(dilate)
-        if crop:
-            cv2.fillPoly(mask, pts=contours_, color=(255, 255, 255))
-            crop_image = cv2.bitwise_and(img, img, mask=mask)
-            cv2.imshow("Crop Image", crop_image)
+        if draw:
+            if crop:
+                mask = np.zeros_like(dilate)
+                cv2.fillPoly(mask, pts=contours_, color=(255, 255, 255))
+                crop_image = cv2.bitwise_and(img, img, mask=mask)
+                cv2.imshow("Crop Image", crop_image)
+            else:
+                cv2.drawContours(img, contours_, -1, (0, 0, 255), 3)
+                cv2.imshow("Image", img)
+            cv2.waitKey(0)
+            cv2.destroyAllWindows()
         else:
-            cv2.drawContours(img, contours_, -1, (0, 0, 255), 3)
-            cv2.imshow("Image", img)
+            return contours_
+
+    @staticmethod
+    def add_tictoe(positions: list, image: np.ndarray) -> np.ndarray:
+        """
+        This method used to add tic toe to our image with defined positions
+        :param positions: position of the tictoe.
+        :param image: The input image
+        :return: The image has some tictoe
+        """
+        for pos in positions:
+            cv2.drawMarker(image, pos, (0, 0, 255), markerType=cv2.MARKER_TILTED_CROSS, markerSize=50,
+                           thickness=3, line_type=cv2.LINE_AA)
+        return image
+
+    def none_tictoe_ignore(self):
+        """
+        This method used to draw contours of big questions that has tic toe inside it.
+        """
+        self.set_image()
+        img = self.get_image()
+        contours = self.big_question_detector(draw=False)
+        positions = [(randint(150, 1700), randint(300, 2700)) for i in range(20)]
+        img_tictoe = self.add_tictoe(positions=positions, image=img)
+        contours_ = []
+        for contour in contours:
+            distances = [cv2.pointPolygonTest(contour, pos, False) for pos in positions]
+            for dist in distances:
+                if dist > 0:
+                    contours_.append(contour)
+                    break
+        cv2.drawContours(img_tictoe, contours_, -1, (0, 0, 255), 3)
+        cv2.imshow("Image", img_tictoe)
         cv2.waitKey(0)
         cv2.destroyAllWindows()
 
 
 if __name__ == "__main__":
     text_detector = TextDetector()
-    text_detector.big_question_detector()
+    text_detector.none_tictoe_ignore()

@@ -1,6 +1,7 @@
-import matplotlib.pyplot as plt
-from tqdm import tqdm
+# import matplotlib.pyplot as plt
+# from tqdm import tqdm
 from activation import *
+from util import *
 
 
 class NeuralNetwork(object):
@@ -11,9 +12,9 @@ class NeuralNetwork(object):
         """
         This method used to initialize the init value
         """
+        self.backward_functions = []
         self.dz = []
         self.output_values = []
-        self.summary = []
         self.layer_names = []
         self.activation_names = []
         self.activation_functions = []
@@ -57,8 +58,9 @@ class NeuralNetwork(object):
         :param x: the input variables
         :return: the predict of the x using the current neuron network.
         """
-        a = 0
         for layer_index in range(self.number_of_layers):
+            if self.activation_functions is None:
+                continue
             z = self.forward(x, self.weights[layer_index]) + self.bias[layer_index]
             self.output_values.append(z)
             a = self.activation_functions[layer_index](z)
@@ -87,16 +89,24 @@ class NeuralNetwork(object):
         for layer_index in reversed(range(self.number_of_layers)):
             # Backward activation
             if layer_index < self.number_of_layers - 1:
-                if self.activation_names == "sigmoid":
-                    self.dz[layer_index] = sigmoid_backward(x_train[layer_index + 1],
-                                                            self.dz[layer_index + 1].dot(
-                                                                 self.weights[layer_index + 1].T))
+                self.dz[layer_index] = self.backward_functions[layer_index](x_train[layer_index + 1],
+                                                                            self.dz[layer_index + 1].dot(
+                                                                            self.weights[layer_index + 1].T))
+            else:
+                self.dz[layer_index] = self.backward_functions[layer_index](self.output_values[layer_index],
+                                                                            y_true)
+            # Backward linear
+            self.dw[layer_index], self.db[layer_index] = linear_backward(x_train[layer_index],
+                                                                         self.weights[layer_index])
 
-    def __update_parameter(self):
+    def __update_parameter(self, learning_rate: float):
         """
+        :param learning_rate:
         This method used to update to parameter in the each neuron in neural network
         """
-        pass
+        for layer_index in range(self.number_of_layers):
+            self.weights[layer_index] -= learning_rate * self.dw[layer_index]
+            self.bias[layer_index] -= learning_rate * self.db[layer_index]
 
     def add(self, layer_name: str = "", n_unit: int = 1, activation: str = None):
         """
@@ -110,28 +120,33 @@ class NeuralNetwork(object):
         self.n_units.append(n_unit)
         if self.number_of_layers > 1:
             # Create init weight and bias
-            self.weights.append(self._init_weights(self.n_units[self.number_of_layers - 1],
-                                                   self.n_units[self.number_of_layers]))
-            self.params.append(self.n_units[self.number_of_layers - 1] * self.n_units[self.number_of_layers])
+            self.weights.append(self._init_weights(self.n_units[self.number_of_layers - 2],
+                                                   self.n_units[self.number_of_layers - 1]))
+            self.params.append(self.n_units[self.number_of_layers - 2] * self.n_units[self.number_of_layers - 1])
             self.bias.append(np.zeros((n_unit, 1)))
-            if activation is None:
-                self.activation_names.append("None")
-                self.activation_functions.append(None)
-            elif activation == "sigmoid":
-                self.activation_names.append("sigmoid")
-                self.activation_functions.append(self.__sigmoid)
-            elif activation == "ReLU":
-                self.activation_names.append("ReLU")
-                self.activation_functions.append(self.__relu)
-            elif activation == "ELU":
-                self.activation_names.append("ELU")
-                self.activation_functions.append(self.__elu)
-            elif activation == "tanh":
-                self.activation_names.append("tanh")
-                self.activation_functions.append(self.__tanh)
-            elif activation == "LeakyReLU":
-                self.activation_names.append("LeakyReLU")
-                self.activation_functions.append(self.__leaky_relu)
+        if activation is None:
+            self.activation_names.append("None")
+            self.activation_functions.append(None)
+        elif activation == "sigmoid":
+            self.activation_names.append("sigmoid")
+            self.activation_functions.append(sigmoid)
+            self.backward_functions.append(sigmoid_backward)
+        elif activation == "ReLU":
+            self.activation_names.append("ReLU")
+            self.activation_functions.append(relu)
+            self.backward_functions.append(relu_backward)
+        elif activation == "ELU":
+            self.activation_names.append("ELU")
+            self.activation_functions.append(elu)
+            self.backward_functions.append(elu_backward)
+        elif activation == "tanh":
+            self.activation_names.append("tanh")
+            self.activation_functions.append(tanh)
+            self.backward_functions.append(tanh_backward)
+        elif activation == "LeakyReLU":
+            self.activation_names.append("LeakyReLU")
+            self.activation_functions.append(leaky_relu)
+            self.backward_functions.append(leaky_relu_backward)
 
     @staticmethod
     def __batch_generator(x_train: np.ndarray, y_train: np.ndarray, batch_size: int):
@@ -171,15 +186,22 @@ class NeuralNetwork(object):
             loss = self.__compute_cost(self.activations[self.number_of_layers - 1], batch_y)
             print("Epoch: {} \t Loss: {}".format(i, loss))
             print("-------------------------------------")
-            self.__backpropagation(batch_y)
-            self.__update_parameter()
+            self.__backpropagation(batch_x, batch_y)
+            self.__update_parameter(learning_rate)
 
     def summary(self):
         """
         This method used to print a string summary of the neural network.
         :return:
         """
-        pass
+        print("Layer \t Activate Function \t params")
+        print("=========================================================")
+        for layer_index in range(self.number_of_layers):
+            print("{} \t {} \t {}".format(self.layer_names[layer_index],
+                                          self.activation_names[layer_index],
+                                          self.params[layer_index - 1]))
+        print("=========================================================")
+        print("Total params: ", sum(self.params))
 
     def pop(self):
         """
@@ -191,80 +213,17 @@ class NeuralNetwork(object):
         self.n_units.pop(-1)
         self.layer_names.pop(-1)
 
-    def __gradient_descent(self):
-        """
-        This method used to compute the gradient descent.
-        :return:
-        """
-        pass
-
-    @staticmethod
-    def __sigmoid(z):
-        """
-        This method used to compute sigmoid function
-        :param: z: input of sigmoid function
-        :return: result after use sigmoid function to z.
-        """
-        return 1 / (1 + np.exp(-z))
-
-    @staticmethod
-    def __add_bias(x: np.ndarray):
-        """
-        This method used to computes the cost of using theta as the parameter for regularized linear regression
-        to fit the data in X and y.
-        :param: X: Input variables
-        :return: cost of using theta as the parameter for regularized linear regression to fit the data in X and y.
-        """
-        m = len(x)
-        bias = np.ones(m)
-        X = np.vstack((bias, x.T)).T
-        return X
-
-    @staticmethod
-    def __relu(z):
-        """
-        This method used to compute the ReLU function
-        :param z: input variables
-        :return: Output of ReLU function
-        """
-        return z if z > 0 else 0
-
-    @staticmethod
-    def __leaky_relu(z, alpha: float = 0.01):
-        """
-        This method used to compute the leaky ReLU function
-        :param z: input variables
-        :param alpha: input variables
-        :return: Output of Leaky ReLU function
-        """
-        return z if z > 0 else alpha * z
-
-    @staticmethod
-    def __elu(z, alpha: float = 1):
-        """
-        This method used to compute the ELU function
-        :param z: input variables
-        :param alpha: input variables
-        :return: Output of ELU function
-        """
-        return z if z > 0 else alpha * (np.exp(z) - 1)
-
-    @staticmethod
-    def __tanh(z):
-        """
-        This method used to compute the tanh function
-        :param z: input variables
-        :return: Output of tanh function
-        """
-        return np.tanh(z)
-
-    def predict(self, x_test: np.ndarray):
+    def predict(self, x: np.ndarray):
         """
         This method used to predict x through the neural network model.
-        :param x_test: the input variables
+        :param x: the input variables
         :return: the predict variables
         """
-        pass
+        a = None
+        for layer_index in range(self.number_of_layers):
+            z = self.forward(x, self.weights[layer_index]) + self.bias[layer_index]
+            a = self.activation_functions[layer_index](z)[-1]
+        return a.argmax(axis=-1)
 
     def accuracy_score(self, y_val: np.ndarray, y_predict: np.ndarray):
         """
@@ -274,3 +233,20 @@ class NeuralNetwork(object):
         :return: the accuracy score.
         """
         pass
+
+
+if __name__ == "__main__":
+    D = 2  # 2 features
+    K = 3  # 3 classes
+    N = 3000  # number of samples
+
+    X, y = spiral_gen(int(N / K), D, K)
+
+    nn = NeuralNetwork()
+    nn.add(layer_name="Input", n_unit=D)
+    nn.add(layer_name="Dense", activation="sigmoid", n_unit=16)
+    nn.add(layer_name="Dense", activation="sigmoid", n_unit=4)
+    nn.add(layer_name="Dense", activation="sigmoid", n_unit=1)
+    nn.summary()
+    nn.fit(x_train=X, y_train=y, epochs=400, learning_rate=0.001)
+    # print(nn.predict(x_test))

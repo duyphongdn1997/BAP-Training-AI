@@ -10,7 +10,7 @@ class TextDetector(object):
     """
     image = None
 
-    def __init__(self, kernel_size: int = 5):
+    def __init__(self, kernel_size: int = 3):
         """
         This is the init
         :param kernel_size: The size of kernel use to process.
@@ -61,7 +61,6 @@ class TextDetector(object):
         This method used to getting dilation of the image.
         :return: dilation of image
         """
-        self.set_image()
         img = self.get_image()
         edges = self.canny_edge_detection(img)
         dilate = cv2.dilate(edges, self.kernel, iterations=iterations)
@@ -139,7 +138,6 @@ class TextDetector(object):
         """
         This method used to draw contours of big questions that has tic toe inside it.
         """
-        self.set_image()
         img = self.get_image()
         contours = self.big_question_detector(draw=False)
         positions = [(randint(150, 1700), randint(300, 2700)) for i in range(20)]
@@ -159,4 +157,6 @@ class TextDetector(object):
 
 if __name__ == "__main__":
     text_detector = TextDetector()
-    text_detector.none_tictoe_ignore()
+    # text_detector.text_detection()
+    text_detector.big_question_detector()
+    # text_detector.none_tictoe_ignore()

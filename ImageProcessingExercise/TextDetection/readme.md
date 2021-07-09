@@ -1,6 +1,10 @@
 
 # OPENCV EXERCISES
 
+## Link Driver kết quả cho các Exercise:
+
+https://drive.google.com/drive/folders/1mSYAJd-TZsJORK5GQtZ-feR-37HG8QXl?usp=sharing
+
 ## 1. Text Detector
 Mục tiêu của bài tập này xác định và vẽ bounding box cho các phần text trên bức ảnh cho trước.
 

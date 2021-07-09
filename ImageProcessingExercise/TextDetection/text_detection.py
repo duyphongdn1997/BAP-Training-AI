@@ -74,7 +74,7 @@ class TextDetector(object):
         img = self.get_image()
         contours, hierarchy = cv2.findContours(dilate, cv2.RETR_EXTERNAL, cv2.CHAIN_APPROX_NONE)
         contours_ = filter(lambda contour: cv2.boundingRect(contour)[1] > 150 and cv2.boundingRect(contour)[3] < 100
-                           and cv2.contourArea(contour) > 100, contours)
+                           and cv2.contourArea(contour) > 250, contours)
         mask = np.zeros_like(dilate)
         for cnt in contours_:
             x, y, w, h = cv2.boundingRect(cnt)

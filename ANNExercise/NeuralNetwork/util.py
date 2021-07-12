@@ -5,60 +5,20 @@ import numpy as np
 import matplotlib.pyplot as plt
 
 
-def create_dataset(N: int = 100, K=2):
-    """
-    This function used to create the dataset and plot it by matplotlib.
-    :param N: The number of points per class
-    :param K: The number of classes.
-    :return: X: The data matrix
-    :return: y: the labels of data
-    """
-    # number of points per class
-    D = 2
-    X = np.zeros((N * K, D))  # data matrix (each row = single example)
-    y = np.zeros(N * K)  # class labels
-
-    for j in range(K):
-        ix = range(N * j, N * (j + 1))
-        r = np.linspace(0, 1, N)  # radius
-        t = np.linspace(j * 4, (j + 1) * 4, N) + np.random.randn(N) * 0.2
-        X[ix] = np.c_[r * np.sin(t), r * np.cos(t)]
-        y[ix] = j
-    # lets visualize the data:
-    plt.scatter(X[:, 0], X[:, 1], c=y, s=40, cmap=plt.cm.Spectral)
-    plt.show()
-
-    return X, y
-
-
-def plot_contour(X, y, model, parameters):
-    """
-    This function used to plot the contour of the data.
-    :param X: The matrix data
-    :param y: The target
-    :param model: The model that predict the matrix data
-    :param parameters:
-    """
-    # plot the resulting classifier
-    h = 0.02
-    x_min, x_max = X[:, 0].min() - 1, X[:, 0].max() + 1
-    y_min, y_max = X[:, 1].min() - 1, X[:, 1].max() + 1
-
+def plot_decision_boundary(pred_func, X, y):
+    # Set min and max values and give it some padding
+    x_min, x_max = X[:, 0].min() - .5, X[:, 0].max() + .5
+    y_min, y_max = X[:, 1].min() - .5, X[:, 1].max() + .5
+    h = 0.01
+    # Generate a grid of points with distance h between them
     xx, yy = np.meshgrid(np.arange(x_min, x_max, h), np.arange(y_min, y_max, h))
-
-    points = np.c_[xx.ravel(), yy.ravel()]
-
-    # forward prop with our trained parameters
-    _, Z = model.forward_prop(points, parameters)
-
-    # classify into highest prob
-    Z = np.argmax(Z, axis=1)
+    # Predict the function value for the whole gid
+    Z = pred_func(np.c_[xx.ravel(), yy.ravel()])
     Z = Z.reshape(xx.shape)
-    plt.contourf(xx, yy, Z, cmap=plt.cm.Spectral, alpha=0.8)
-
-    # plt the points
-    plt.scatter(X[:, 0], X[:, 1], c=y, s=40, cmap=plt.cm.Spectral)
-    # plt.savefig('spiral_net.png')
+    # Plot the contour and training examples
+    plt.contourf(xx, yy, Z, cmap=plt.cm.Spectral)
+    plt.scatter(X[:, 0], X[:, 1], c=y, cmap=plt.cm.Spectral)
+    plt.show()
 
 
 def spiral_gen(N, D, K):
@@ -77,3 +37,23 @@ def spiral_gen(N, D, K):
     # plt.scatter(X[:, 0], X[:, 1], c=y, s=40, cmap=plt.cm.Spectral)
     # plt.show()
     return X, y
+
+
+def reg_loss_calc(w_list, l2=True, reg=1e-3):
+    loss = 0
+    if l2:
+        for i in range(len(w_list)):
+            loss += 0.5 * reg * np.sum(w_list[i] * w_list[i])
+    else:
+        for i in range(len(w_list)):
+            loss += 0.5 * reg * np.sum(abs(w_list[i]))
+    return loss
+
+
+def split(X, y, test_proportion):
+    ratio = int(X.shape[0] * test_proportion)
+    X_train = X[ratio:, :]
+    X_test = X[:ratio, :]
+    Y_train = y[ratio:]
+    Y_test = y[:ratio]
+    return X_train, X_test, Y_train, Y_test

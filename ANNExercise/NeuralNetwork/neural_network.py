@@ -205,7 +205,7 @@ class NeuralNetwork(object):
         :return: the weights after training
         """
         if batch_size is None:
-            batch_size = len(x_train)
+            batch_size = len(x_train) - 1
         if self.activation_names[-1] == "softmax":
             y_predict = self.__feed_forward(x_train)[-1]
             loss = self.__compute_cost_softmax(y_predict, y_train)
@@ -323,14 +323,14 @@ if __name__ == "__main__":
     N = 3000  # number of samples
 
     X, y = spiral_gen(int(N / K), D, K)
-    X_train, X_test, y_train, y_test = split(X, y, 0.3)
+    X_train, y_train, X_test, y_test = train_valid_split(X, y, 0.7)
     nn = NeuralNetwork()
     nn.add(layer_name="Dense", activation="sigmoid", n_unit=D)
-    nn.add(layer_name="Dense", activation="ReLU", n_unit=256)
-    nn.add(layer_name="Dense", activation="ReLU", n_unit=64)
+    nn.add(layer_name="Dense", activation="ReLU", n_unit=16)
+    nn.add(layer_name="Dense", activation="ReLU", n_unit=8)
     nn.add(layer_name="Dense", activation="softmax", n_unit=K)
     nn.summary()
-    nn.fit(x_train=X, y_train=y, epochs=1000, learning_rate=1, batch_size=2999, reg=0.002)
+    nn.fit(x_train=X_train, y_train=y_train, epochs=1000, learning_rate=1, batch_size=None, reg=0.002)
     plot_decision_boundary(nn.predict, X, y)
     nn.accuracy_score(y_test, X_test)
     nn.plot_history()

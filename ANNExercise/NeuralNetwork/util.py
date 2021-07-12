@@ -3,6 +3,7 @@ These code copied from Andrej Karpathy, on his cs231n course github code.
 """
 import numpy as np
 import matplotlib.pyplot as plt
+import random
 
 
 def plot_decision_boundary(pred_func, X, y):
@@ -50,10 +51,16 @@ def reg_loss_calc(w_list, l2=True, reg=1e-3):
     return loss
 
 
-def split(X, y, test_proportion):
-    ratio = int(X.shape[0] * test_proportion)
-    X_train = X[ratio:, :]
-    X_test = X[:ratio, :]
-    Y_train = y[ratio:]
-    Y_test = y[:ratio]
-    return X_train, X_test, Y_train, Y_test
+def train_valid_split(X, y, p=0.6):
+    ind = np.arange(X.shape[0])
+    np.random.shuffle(ind)
+    split = int(X.shape[0] * p)
+    train_ind = ind[:split]
+    valid_ind = ind[split:]
+
+    X_train = X[train_ind]
+    y_train = y[train_ind]
+    X_valid = X[valid_ind]
+    y_valid = y[valid_ind]
+
+    return X_train, y_train, X_valid, y_valid

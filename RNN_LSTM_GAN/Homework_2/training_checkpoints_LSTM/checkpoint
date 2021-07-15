@@ -1,0 +1,2 @@
+model_checkpoint_path: "checkpt_7"
+all_model_checkpoint_paths: "checkpt_7"

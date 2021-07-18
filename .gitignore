@@ -8,11 +8,11 @@ __pycache__/
 
 # Dataset
 RNN_LSTM_GAN/Homework_1/Dataset/
-RNN_LSTM_GAN/Huy_Refs
-RNN_LSTM_GAN/HWs
-RNN_LSTM_GAN/Intern_Reports
-RNN_LSTM_GAN/Labs
-RNN_LSTM_GAN/Lectures
+RNN_LSTM_GAN/Huy_Refs/
+RNN_LSTM_GAN/HWs/
+RNN_LSTM_GAN/Intern_Reports/
+RNN_LSTM_GAN/Labs/
+RNN_LSTM_GAN/Lectures/
 
 # Distribution / packaging
 .Python

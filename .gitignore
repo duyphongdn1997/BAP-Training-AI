@@ -6,6 +6,9 @@ __pycache__/
 # C extensions
 *.so
 
+# Dataset
+RNN_LSTM_GAN/Homework_1/Dataset/
+
 # Distribution / packaging
 .Python
 build/
